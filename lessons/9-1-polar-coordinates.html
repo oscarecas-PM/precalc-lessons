@@ -210,6 +210,15 @@
         </div>
       </div>
 
+      <!-- Generated problems land here -->
+      <div id="generated-problems"></div>
+
+      <!-- Generate button -->
+      <div style="text-align:center; margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+        <p id="gen-counter" style="font-size:0.82rem; color:#8a6a52; font-family:Arial,sans-serif; margin-bottom:10px;"></p>
+        <button id="gen-btn" class="plot-btn" onclick="generateMore()">Generate 5 More Problems</button>
+      </div>
+
     </div>
 
   </main>
@@ -417,6 +426,132 @@
       } else {
         el.style.display = 'block';
         btn.textContent = 'Hide Answer';
+      }
+    }
+
+    // ── Practice Problem Generator ──
+    const NICE_ANGLES = [
+      {d:0,   cos:'1',      sin:'0',      cv:1,                sv:0},
+      {d:30,  cos:'√3/2',   sin:'1/2',    cv:Math.sqrt(3)/2,   sv:0.5},
+      {d:45,  cos:'√2/2',   sin:'√2/2',   cv:Math.sqrt(2)/2,   sv:Math.sqrt(2)/2},
+      {d:60,  cos:'1/2',    sin:'√3/2',   cv:0.5,              sv:Math.sqrt(3)/2},
+      {d:90,  cos:'0',      sin:'1',      cv:0,                sv:1},
+      {d:120, cos:'-1/2',   sin:'√3/2',   cv:-0.5,             sv:Math.sqrt(3)/2},
+      {d:135, cos:'-√2/2',  sin:'√2/2',   cv:-Math.sqrt(2)/2,  sv:Math.sqrt(2)/2},
+      {d:150, cos:'-√3/2',  sin:'1/2',    cv:-Math.sqrt(3)/2,  sv:0.5},
+      {d:180, cos:'-1',     sin:'0',      cv:-1,               sv:0},
+      {d:210, cos:'-√3/2',  sin:'-1/2',   cv:-Math.sqrt(3)/2,  sv:-0.5},
+      {d:225, cos:'-√2/2',  sin:'-√2/2',  cv:-Math.sqrt(2)/2,  sv:-Math.sqrt(2)/2},
+      {d:240, cos:'-1/2',   sin:'-√3/2',  cv:-0.5,             sv:-Math.sqrt(3)/2},
+      {d:270, cos:'0',      sin:'-1',     cv:0,                sv:-1},
+      {d:300, cos:'1/2',    sin:'-√3/2',  cv:0.5,              sv:-Math.sqrt(3)/2},
+      {d:315, cos:'√2/2',   sin:'-√2/2',  cv:Math.sqrt(2)/2,   sv:-Math.sqrt(2)/2},
+      {d:330, cos:'√3/2',   sin:'-1/2',   cv:Math.sqrt(3)/2,   sv:-0.5},
+    ];
+
+    let generatedCount = 0;
+    const MAX_GEN = 10;
+    let genId = 0;
+
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+    function fmtVal(v) {
+      const r = Math.round(v * 1000) / 1000;
+      return Number.isInteger(r) ? String(r) : r.toFixed(3);
+    }
+
+    // Format one multiplication step: "r · (exact) = result"
+    function fmtStep(r, exact, val) {
+      const product = r * val;
+      const clean = Math.abs(product - Math.round(product)) < 0.0001;
+      if (exact === '0')  return `${r} · 0 = <strong>0</strong>`;
+      if (exact === '1')  return `${r} · 1 = <strong>${r}</strong>`;
+      if (exact === '-1') return `${r} · (−1) = <strong>${-r}</strong>`;
+      const pStr = clean ? String(Math.round(product)) : product.toFixed(3);
+      return `${r} · (${exact}) ${clean ? '=' : '≈'} <strong>${pStr}</strong>`;
+    }
+
+    function buildProblem(qNum, question, answerHTML) {
+      const id = `gp${++genId}`;
+      return `
+        <div class="practice-problem">
+          <p class="q-label">Problem ${qNum}</p>
+          <p>${question}</p>
+          <button class="show-answer-btn" onclick="toggleAnswer('${id}', this)">Show Answer</button>
+          <div class="answer-reveal" id="${id}">${answerHTML}</div>
+        </div>`;
+    }
+
+    // Type A: Polar → Rectangular
+    function genPolarToRect(qNum) {
+      const r = pick([1, 2, 3, 4, 5, 6]);
+      const a = pick(NICE_ANGLES);
+      const x = fmtVal(r * a.cv), y = fmtVal(r * a.sv);
+      const q = `Convert to rectangular coordinates: <strong>(${r}, ${a.d}°)</strong>`;
+      const ans =
+        `x = ${fmtStep(r, a.cos, a.cv)}<br>` +
+        `y = ${fmtStep(r, a.sin, a.sv)}<br>` +
+        `<strong>Rectangular: (${x}, ${y})</strong>`;
+      return buildProblem(qNum, q, ans);
+    }
+
+    // Type B: Rectangular → Polar (coords generated from known polar to keep answers clean)
+    function genRectToPolar(qNum) {
+      const r = pick([2, 3, 4, 5]);
+      // Exclude axis angles so arctan explanation is always needed
+      const a = pick(NICE_ANGLES.filter(a => a.d % 90 !== 0));
+      const x = fmtVal(r * a.cv), y = fmtVal(r * a.sv);
+      const atanRaw = Math.round(Math.atan(r * a.sv / (r * a.cv)) * 180 / Math.PI);
+      let atanNote;
+      if      (a.d < 90)  atanNote = `arctan(${y}/${x}) = ${atanRaw}° → <strong>θ = ${a.d}°</strong> (Q I, no adjustment)`;
+      else if (a.d < 180) atanNote = `arctan(${y}/${x}) = ${atanRaw}° → Q II: ${atanRaw}° + 180° = <strong>${a.d}°</strong>`;
+      else if (a.d < 270) atanNote = `arctan(${y}/${x}) = ${atanRaw}° → Q III: ${atanRaw}° + 180° = <strong>${a.d}°</strong>`;
+      else                atanNote = `arctan(${y}/${x}) = ${atanRaw}° → Q IV: ${atanRaw}° + 360° = <strong>${a.d}°</strong>`;
+      const q = `Convert to polar coordinates: <strong>(${x}, ${y})</strong>`;
+      const ans =
+        `r = √(${x}² + ${y}²) = √${r*r} = <strong>${r}</strong><br>` +
+        `tan(θ) = y/x: ${atanNote}<br>` +
+        `<strong>Polar: (${r}, ${a.d}°)</strong>`;
+      return buildProblem(qNum, q, ans);
+    }
+
+    // Type C: Alternate representations
+    function genAltRep(qNum) {
+      const r = pick([2, 3, 4, 5]);
+      const a = pick(NICE_ANGLES);
+      const alt2 = (a.d + 180) % 360;
+      const q = `Give two other polar representations of <strong>(${r}, ${a.d}°)</strong> — one with positive r, one with negative r.`;
+      const ans =
+        `Positive r (add 360°): <strong>(${r}, ${a.d + 360}°)</strong><br>` +
+        `Negative r (add 180°, flip r): <strong>(−${r}, ${alt2}°)</strong><br>` +
+        `All three name the exact same point in the plane.`;
+      return buildProblem(qNum, q, ans);
+    }
+
+    function generateMore() {
+      const batch = Math.min(5, MAX_GEN - generatedCount);
+      if (batch <= 0) return;
+      const types = ['polar', 'rect', 'alt'];
+      const container = document.getElementById('generated-problems');
+      for (let i = 0; i < batch; i++) {
+        const qNum = 4 + generatedCount + i + 1;
+        const type = pick(types);
+        let html;
+        if (type === 'polar')     html = genPolarToRect(qNum);
+        else if (type === 'rect') html = genRectToPolar(qNum);
+        else                      html = genAltRep(qNum);
+        container.insertAdjacentHTML('beforeend', html);
+      }
+      generatedCount += batch;
+      const btn     = document.getElementById('gen-btn');
+      const counter = document.getElementById('gen-counter');
+      if (generatedCount >= MAX_GEN) {
+        btn.disabled = true;
+        btn.textContent = '✓ All 10 extra problems generated';
+        btn.style.cssText = 'background:#d1fae5; color:#065f46; cursor:default;';
+        counter.textContent = '';
+      } else {
+        counter.textContent = `${generatedCount} of ${MAX_GEN} extra problems generated`;
       }
     }
 
