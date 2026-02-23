@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>9.1 Polar Coordinates — Precalculus</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+
+  <header class="lesson-header">
+    <a class="back-link" href="../index.html">← Back to all lessons</a>
+    <p class="section-tag">Section 9.1</p>
+    <h1>Polar Coordinates</h1>
+    <p>A new way to describe every point in the plane</p>
+  </header>
+
+  <main class="lesson-body">
+
+    <!-- CONCEPT -->
+    <div class="block">
+      <h2>What Are Polar Coordinates?</h2>
+      <p>
+        You already know how to locate a point using <strong>(x, y)</strong> — the rectangular
+        (Cartesian) system. Polar coordinates give you a second way to describe the exact same point,
+        using <strong>distance</strong> and <strong>direction</strong> instead.
+      </p>
+      <p>
+        A polar coordinate is written as <strong>(r, θ)</strong> where:
+      </p>
+      <div class="formula-box">
+        <strong>r</strong> = the distance from the origin (the "pole") to the point<br>
+        <strong>θ</strong> = the angle measured counterclockwise from the positive x-axis (the "polar axis")<br><br>
+        θ can be in <strong>degrees</strong> or <strong>radians</strong>
+      </div>
+      <p>
+        Think of it like giving directions: instead of saying "go 3 right and 4 up," you say
+        "go 5 units at a 53° angle."
+      </p>
+      <h3>Important Notes</h3>
+      <p>
+        Unlike rectangular coordinates, a polar point has <strong>infinitely many representations</strong>
+        because you can add or subtract full rotations (360° or 2π) to θ and reach the same point.
+        Also, a <strong>negative r</strong> means you go in the opposite direction of θ.
+      </p>
+      <div class="formula-box">
+        (r, θ) = (r, θ + 360°) = (r, θ + 720°) = … <br>
+        (r, θ) = (−r, θ + 180°)
+      </div>
+    </div>
+
+    <!-- CONVERSION FORMULAS -->
+    <div class="block">
+      <h2>Converting Between Polar and Rectangular</h2>
+      <p>These four formulas connect the two systems. Memorize them — you'll use them constantly.</p>
+
+      <h3>Polar → Rectangular</h3>
+      <div class="formula-box">
+        x = r · cos(θ)<br>
+        y = r · sin(θ)
+      </div>
+
+      <h3>Rectangular → Polar</h3>
+      <div class="formula-box">
+        r = √(x² + y²)<br>
+        tan(θ) = y / x &nbsp;&nbsp; ← then use arctan, and adjust for the correct quadrant
+      </div>
+
+      <div class="example-box">
+        <p class="ex-label">Example 1 — Polar to Rectangular</p>
+        <p>Convert (4, 60°) to rectangular form.</p>
+        <p>
+          x = 4 · cos(60°) = 4 · (1/2) = <strong>2</strong><br>
+          y = 4 · sin(60°) = 4 · (√3/2) = <strong>2√3 ≈ 3.46</strong>
+        </p>
+        <p>Rectangular form: <strong>(2, 2√3)</strong></p>
+      </div>
+
+      <div class="example-box">
+        <p class="ex-label">Example 2 — Rectangular to Polar</p>
+        <p>Convert (−3, 3) to polar form.</p>
+        <p>
+          r = √((−3)² + 3²) = √(9 + 9) = √18 = <strong>3√2</strong><br>
+          tan(θ) = 3 / (−3) = −1 → arctan(−1) = −45°<br>
+          But (−3, 3) is in <strong>Quadrant II</strong>, so θ = 180° − 45° = <strong>135°</strong>
+        </p>
+        <p>Polar form: <strong>(3√2, 135°)</strong></p>
+      </div>
+    </div>
+
+    <!-- INTERACTIVE PLOTTER -->
+    <div class="block">
+      <h2>Interactive Polar Plotter</h2>
+      <p>Enter any polar point (r, θ) below and see it plotted on the polar coordinate system.
+         The equivalent rectangular coordinates are shown automatically.</p>
+
+      <div class="interactive-box">
+        <h3>Plot a Polar Point</h3>
+        <canvas id="polarCanvas" width="340" height="340"></canvas>
+
+        <div class="input-row">
+          <div class="input-group">
+            <label>r (radius)</label>
+            <input type="number" id="inputR" value="4" step="0.5" />
+          </div>
+          <div class="input-group">
+            <label>θ (degrees)</label>
+            <input type="number" id="inputTheta" value="45" step="5" />
+          </div>
+        </div>
+        <button class="plot-btn" onclick="plotPoint()">Plot Point</button>
+
+        <div class="result-box" id="resultBox">
+          Enter r and θ, then click Plot Point.
+        </div>
+      </div>
+    </div>
+
+    <!-- QUADRANT TIPS -->
+    <div class="block">
+      <h2>Quadrant Guide for Rectangular → Polar</h2>
+      <p>When finding θ using arctan(y/x), you must check the quadrant of (x, y) and adjust:</p>
+      <div class="formula-box">
+        Quadrant I &nbsp; (x > 0, y > 0): θ = arctan(y/x) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ← no adjustment needed<br>
+        Quadrant II &nbsp;(x &lt; 0, y > 0): θ = arctan(y/x) + 180°<br>
+        Quadrant III (x &lt; 0, y &lt; 0): θ = arctan(y/x) + 180°<br>
+        Quadrant IV &nbsp;(x > 0, y &lt; 0): θ = arctan(y/x) + 360°
+      </div>
+      <p>Your calculator's arctan always returns a value between −90° and 90°, so you need to
+         adjust based on where the point actually lives.</p>
+    </div>
+
+    <!-- PRACTICE -->
+    <div class="block">
+      <h2>Practice Problems</h2>
+      <p>Try each one on your own, then reveal the answer to check your work.</p>
+
+      <div class="practice-problem">
+        <p class="q-label">Problem 1</p>
+        <p>Plot and convert to rectangular: <strong>(5, 30°)</strong></p>
+        <button class="show-answer-btn" onclick="toggleAnswer('a1', this)">Show Answer</button>
+        <div class="answer-reveal" id="a1">
+          x = 5 · cos(30°) = 5 · (√3/2) ≈ 4.33<br>
+          y = 5 · sin(30°) = 5 · (1/2) = 2.5<br>
+          <strong>Rectangular: (5√3/2, 5/2) ≈ (4.33, 2.5)</strong>
+        </div>
+      </div>
+
+      <div class="practice-problem">
+        <p class="q-label">Problem 2</p>
+        <p>Convert to rectangular: <strong>(−3, 90°)</strong> &nbsp;(Note the negative r!)</p>
+        <button class="show-answer-btn" onclick="toggleAnswer('a2', this)">Show Answer</button>
+        <div class="answer-reveal" id="a2">
+          x = −3 · cos(90°) = −3 · 0 = 0<br>
+          y = −3 · sin(90°) = −3 · 1 = −3<br>
+          <strong>Rectangular: (0, −3)</strong><br>
+          The negative r flips the point to the opposite direction — instead of (0, 3) you get (0, −3).
+        </div>
+      </div>
+
+      <div class="practice-problem">
+        <p class="q-label">Problem 3</p>
+        <p>Convert to polar: <strong>(1, −√3)</strong></p>
+        <button class="show-answer-btn" onclick="toggleAnswer('a3', this)">Show Answer</button>
+        <div class="answer-reveal" id="a3">
+          r = √(1² + (−√3)²) = √(1 + 3) = √4 = 2<br>
+          tan(θ) = −√3/1 = −√3 → arctan(−√3) = −60°<br>
+          Point is in Quadrant IV (x > 0, y &lt; 0), so θ = −60° + 360° = 300°<br>
+          <strong>Polar: (2, 300°)</strong>
+        </div>
+      </div>
+
+      <div class="practice-problem">
+        <p class="q-label">Problem 4</p>
+        <p>Give two other polar representations of the point <strong>(3, 45°)</strong> — one with positive r and one with negative r.</p>
+        <button class="show-answer-btn" onclick="toggleAnswer('a4', this)">Show Answer</button>
+        <div class="answer-reveal" id="a4">
+          Positive r (add 360°): <strong>(3, 405°)</strong><br>
+          Negative r (flip direction, add 180°): <strong>(−3, 225°)</strong><br>
+          All three represent the exact same point in the plane.
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    // ── Canvas Polar Plotter ──
+    const canvas = document.getElementById('polarCanvas');
+    const ctx    = canvas.getContext('2d');
+    const cx     = canvas.width  / 2;
+    const cy     = canvas.height / 2;
+    const scale  = 30; // pixels per unit
+    const rings  = 5;
+
+    function drawGrid() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#dde3f0';
+      ctx.lineWidth = 1;
+
+      // Concentric circles
+      for (let i = 1; i <= rings; i++) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, i * scale, 0, 2 * Math.PI);
+        ctx.stroke();
+        // Label
+        ctx.fillStyle = '#aab';
+        ctx.font = '10px Arial';
+        ctx.fillText(i, cx + i * scale + 3, cy - 3);
+      }
+
+      // Angle lines every 30°
+      for (let deg = 0; deg < 360; deg += 30) {
+        const rad = deg * Math.PI / 180;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(rad) * rings * scale, cy - Math.sin(rad) * rings * scale);
+        ctx.stroke();
+        // Angle labels
+        const lx = cx + Math.cos(rad) * (rings * scale + 16);
+        const ly = cy - Math.sin(rad) * (rings * scale + 16);
+        ctx.fillStyle = '#99a';
+        ctx.font = '9px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(deg + '°', lx, ly);
+      }
+
+      // Axes
+      ctx.strokeStyle = '#aab';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(canvas.width, cy); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, canvas.height); ctx.stroke();
+    }
+
+    function plotPoint() {
+      const r     = parseFloat(document.getElementById('inputR').value);
+      const theta = parseFloat(document.getElementById('inputTheta').value);
+
+      if (isNaN(r) || isNaN(theta)) {
+        document.getElementById('resultBox').textContent = 'Please enter valid numbers.';
+        return;
+      }
+
+      const rad = theta * Math.PI / 180;
+      const px  = cx + r * Math.cos(rad) * scale;
+      const py  = cy - r * Math.sin(rad) * scale;
+
+      const rectX = (r * Math.cos(rad)).toFixed(3);
+      const rectY = (r * Math.sin(rad)).toFixed(3);
+
+      drawGrid();
+
+      // Draw line from origin to point
+      ctx.strokeStyle = '#2ec4b6';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(px, py);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Arc for angle
+      ctx.strokeStyle = '#ffb703';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 22, 0, -rad, rad < 0);
+      ctx.stroke();
+
+      // Draw point
+      ctx.fillStyle = '#1a2744';
+      ctx.beginPath();
+      ctx.arc(px, py, 6, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Label point
+      ctx.fillStyle = '#1a2744';
+      ctx.font = 'bold 12px Georgia';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(`(${r}, ${theta}°)`, px + 9, py - 4);
+
+      document.getElementById('resultBox').innerHTML =
+        `Polar: <strong>(${r}, ${theta}°)</strong><br>` +
+        `x = ${r} · cos(${theta}°) = <strong>${rectX}</strong><br>` +
+        `y = ${r} · sin(${theta}°) = <strong>${rectY}</strong><br>` +
+        `Rectangular: <strong>(${rectX}, ${rectY})</strong>`;
+    }
+
+    function toggleAnswer(id, btn) {
+      const el = document.getElementById(id);
+      if (el.style.display === 'block') {
+        el.style.display = 'none';
+        btn.textContent = 'Show Answer';
+      } else {
+        el.style.display = 'block';
+        btn.textContent = 'Hide Answer';
+      }
+    }
+
+    // Initial draw
+    drawGrid();
+    plotPoint();
+  </script>
+
+</body>
+</html>
