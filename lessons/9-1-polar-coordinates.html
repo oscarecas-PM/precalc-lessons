@@ -253,19 +253,28 @@
       document.getElementById('inputThetaRad').value = expr;
     }
 
-    // ── Parse θ input (supports "pi", "π", fractions like "2π/3" or "3pi/4") ──
+    // ── Parse θ input (supports "pi", "π", "3pi/4", "2π/3", plain numbers) ──
     function parseThetaRad(raw) {
-      let expr = raw.trim()
-        .replace(/(\d)\s*π/g,  '$1*Math.PI')  // "2π"   → "2*Math.PI"
-        .replace(/π/g,          'Math.PI')     // "π"    → "Math.PI"
-        .replace(/(\d)\s*pi/gi, '$1*Math.PI')  // "3pi"  → "3*Math.PI"
-        .replace(/pi/gi,        'Math.PI');    // "pi"   → "Math.PI"
-      try {
-        const val = Function('"use strict"; return (' + expr + ')')();
-        return (typeof val === 'number' && isFinite(val)) ? val : NaN;
-      } catch (e) {
-        return NaN;
+      // Normalize: replace π symbol (and variants), strip spaces, lowercase
+      const s = raw.trim()
+        .replace(/[πΠ]/g, 'pi')
+        .replace(/\s+/g, '')
+        .toLowerCase();
+
+      // Match pattern: [-] [coeff] [*] pi [/ denom]
+      // Handles: pi, pi/4, 2pi, 3pi/4, -pi/2, 2*pi/3, etc.
+      const m = s.match(/^(-?)(\d*\.?\d*)\*?pi(\/(\d+\.?\d*))?$/);
+      if (m) {
+        const sign  = m[1] === '-' ? -1 : 1;
+        const coeff = m[2] !== '' ? parseFloat(m[2]) : 1;
+        const denom = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        if (denom === 0 || isNaN(coeff) || isNaN(denom)) return NaN;
+        return sign * coeff * Math.PI / denom;
       }
+
+      // Fall back to plain number (e.g. "1.5708")
+      const num = parseFloat(s);
+      return isNaN(num) ? NaN : num;
     }
 
     // Format a radian value as a readable π fraction (best effort)
