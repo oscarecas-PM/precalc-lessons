@@ -253,14 +253,14 @@
       document.getElementById('inputThetaRad').value = expr;
     }
 
-    // ── Parse θ input (supports "pi", "π", fractions) ──
+    // ── Parse θ input (supports "pi", "π", fractions like "2π/3" or "3pi/4") ──
     function parseThetaRad(raw) {
-      // Replace π symbol and the word "pi" (case-insensitive) with Math.PI
       let expr = raw.trim()
-        .replace(/π/g, 'Math.PI')
-        .replace(/pi/gi, 'Math.PI');
+        .replace(/(\d)\s*π/g,  '$1*Math.PI')  // "2π"   → "2*Math.PI"
+        .replace(/π/g,          'Math.PI')     // "π"    → "Math.PI"
+        .replace(/(\d)\s*pi/gi, '$1*Math.PI')  // "3pi"  → "3*Math.PI"
+        .replace(/pi/gi,        'Math.PI');    // "pi"   → "Math.PI"
       try {
-        // Safe evaluation of arithmetic expressions only
         const val = Function('"use strict"; return (' + expr + ')')();
         return (typeof val === 'number' && isFinite(val)) ? val : NaN;
       } catch (e) {
