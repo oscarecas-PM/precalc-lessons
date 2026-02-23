@@ -96,6 +96,13 @@
 
       <div class="interactive-box">
         <h3>Plot a Polar Point</h3>
+
+        <!-- DEG / RAD toggle -->
+        <div class="mode-toggle">
+          <button id="btn-deg" class="mode-btn active" onclick="setMode('deg')">DEG</button>
+          <button id="btn-rad" class="mode-btn"        onclick="setMode('rad')">RAD</button>
+        </div>
+
         <canvas id="polarCanvas" width="340" height="340"></canvas>
 
         <div class="input-row">
@@ -104,10 +111,32 @@
             <input type="number" id="inputR" value="4" step="0.5" />
           </div>
           <div class="input-group">
-            <label>θ (degrees)</label>
-            <input type="number" id="inputTheta" value="45" step="5" />
+            <label id="theta-label">θ (degrees)</label>
+            <input type="number" id="inputThetaDeg" value="45" step="5" />
+            <input type="text"   id="inputThetaRad" value="π/4" style="display:none;" placeholder="e.g. pi/4 or 3pi/2" />
           </div>
         </div>
+
+        <!-- π quick-select buttons (shown in RAD mode only) -->
+        <div id="pi-buttons" style="display:none; text-align:center;">
+          <p style="font-size:0.78rem; color:#6b7a99; margin-bottom:8px; font-family:Arial,sans-serif;">Common angles — click to fill:</p>
+          <div class="pi-btn-row">
+            <button class="pi-btn" onclick="setPi('π/6')">π/6</button>
+            <button class="pi-btn" onclick="setPi('π/4')">π/4</button>
+            <button class="pi-btn" onclick="setPi('π/3')">π/3</button>
+            <button class="pi-btn" onclick="setPi('π/2')">π/2</button>
+            <button class="pi-btn" onclick="setPi('2π/3')">2π/3</button>
+            <button class="pi-btn" onclick="setPi('3π/4')">3π/4</button>
+          </div>
+          <div class="pi-btn-row" style="margin-top:6px;">
+            <button class="pi-btn" onclick="setPi('π')">π</button>
+            <button class="pi-btn" onclick="setPi('5π/4')">5π/4</button>
+            <button class="pi-btn" onclick="setPi('3π/2')">3π/2</button>
+            <button class="pi-btn" onclick="setPi('7π/4')">7π/4</button>
+            <button class="pi-btn" onclick="setPi('2π')">2π</button>
+          </div>
+        </div>
+
         <button class="plot-btn" onclick="plotPoint()">Plot Point</button>
 
         <div class="result-box" id="resultBox">
@@ -186,14 +215,73 @@
   </main>
 
   <script>
-    // ── Canvas Polar Plotter ──
+    // ── Canvas Setup ──
     const canvas = document.getElementById('polarCanvas');
     const ctx    = canvas.getContext('2d');
     const cx     = canvas.width  / 2;
     const cy     = canvas.height / 2;
-    const scale  = 30; // pixels per unit
+    const scale  = 30;
     const rings  = 5;
 
+    let currentMode = 'deg'; // 'deg' or 'rad'
+
+    // Radian angle labels for the grid (every 30° = π/6)
+    const radLabels = {
+      0: '0', 30: 'π/6', 60: 'π/3', 90: 'π/2',
+      120: '2π/3', 150: '5π/6', 180: 'π',
+      210: '7π/6', 240: '4π/3', 270: '3π/2',
+      300: '5π/3', 330: '11π/6'
+    };
+
+    // ── Mode Toggle ──
+    function setMode(mode) {
+      currentMode = mode;
+      const isDeg = mode === 'deg';
+
+      document.getElementById('btn-deg').classList.toggle('active', isDeg);
+      document.getElementById('btn-rad').classList.toggle('active', !isDeg);
+      document.getElementById('theta-label').textContent = isDeg ? 'θ (degrees)' : 'θ (radians)';
+      document.getElementById('inputThetaDeg').style.display = isDeg  ? '' : 'none';
+      document.getElementById('inputThetaRad').style.display = !isDeg ? '' : 'none';
+      document.getElementById('pi-buttons').style.display    = !isDeg ? '' : 'none';
+
+      drawGrid();
+    }
+
+    // ── π Quick-Select ──
+    function setPi(expr) {
+      document.getElementById('inputThetaRad').value = expr;
+    }
+
+    // ── Parse θ input (supports "pi", "π", fractions) ──
+    function parseThetaRad(raw) {
+      // Replace π symbol and the word "pi" (case-insensitive) with Math.PI
+      let expr = raw.trim()
+        .replace(/π/g, 'Math.PI')
+        .replace(/pi/gi, 'Math.PI');
+      try {
+        // Safe evaluation of arithmetic expressions only
+        const val = Function('"use strict"; return (' + expr + ')')();
+        return (typeof val === 'number' && isFinite(val)) ? val : NaN;
+      } catch (e) {
+        return NaN;
+      }
+    }
+
+    // Format a radian value as a readable π fraction (best effort)
+    function formatRad(val) {
+      const fractions = [
+        [1,6,'π/6'], [1,4,'π/4'], [1,3,'π/3'], [1,2,'π/2'],
+        [2,3,'2π/3'], [3,4,'3π/4'], [1,1,'π'],
+        [5,4,'5π/4'], [3,2,'3π/2'], [7,4,'7π/4'], [2,1,'2π']
+      ];
+      for (const [n, d, label] of fractions) {
+        if (Math.abs(val - (n * Math.PI / d)) < 0.0001) return label;
+      }
+      return val.toFixed(4) + ' rad';
+    }
+
+    // ── Draw Polar Grid ──
     function drawGrid() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.strokeStyle = '#dde3f0';
@@ -204,55 +292,69 @@
         ctx.beginPath();
         ctx.arc(cx, cy, i * scale, 0, 2 * Math.PI);
         ctx.stroke();
-        // Label
         ctx.fillStyle = '#aab';
         ctx.font = '10px Arial';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
         ctx.fillText(i, cx + i * scale + 3, cy - 3);
       }
 
-      // Angle lines every 30°
+      // Angle lines & labels every 30°
       for (let deg = 0; deg < 360; deg += 30) {
         const rad = deg * Math.PI / 180;
+        ctx.strokeStyle = '#dde3f0';
+        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         ctx.lineTo(cx + Math.cos(rad) * rings * scale, cy - Math.sin(rad) * rings * scale);
         ctx.stroke();
-        // Angle labels
-        const lx = cx + Math.cos(rad) * (rings * scale + 16);
-        const ly = cy - Math.sin(rad) * (rings * scale + 16);
+
+        const lx = cx + Math.cos(rad) * (rings * scale + 18);
+        const ly = cy - Math.sin(rad) * (rings * scale + 18);
         ctx.fillStyle = '#99a';
         ctx.font = '9px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(deg + '°', lx, ly);
+        const label = currentMode === 'rad' ? radLabels[deg] : deg + '°';
+        ctx.fillText(label, lx, ly);
       }
 
       // Axes
-      ctx.strokeStyle = '#aab';
+      ctx.strokeStyle = '#c0c8dd';
       ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(canvas.width, cy); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, canvas.height); ctx.stroke();
     }
 
+    // ── Plot Point ──
     function plotPoint() {
-      const r     = parseFloat(document.getElementById('inputR').value);
-      const theta = parseFloat(document.getElementById('inputTheta').value);
+      const r = parseFloat(document.getElementById('inputR').value);
+      let thetaRad, thetaDisplay;
 
-      if (isNaN(r) || isNaN(theta)) {
-        document.getElementById('resultBox').textContent = 'Please enter valid numbers.';
-        return;
+      if (currentMode === 'deg') {
+        const deg = parseFloat(document.getElementById('inputThetaDeg').value);
+        if (isNaN(deg)) { showError(); return; }
+        thetaRad = deg * Math.PI / 180;
+        thetaDisplay = deg + '°';
+      } else {
+        const raw = document.getElementById('inputThetaRad').value;
+        thetaRad = parseThetaRad(raw);
+        if (isNaN(thetaRad)) { showError(); return; }
+        thetaDisplay = raw.trim(); // show what user typed
       }
 
-      const rad = theta * Math.PI / 180;
-      const px  = cx + r * Math.cos(rad) * scale;
-      const py  = cy - r * Math.sin(rad) * scale;
+      if (isNaN(r)) { showError(); return; }
 
-      const rectX = (r * Math.cos(rad)).toFixed(3);
-      const rectY = (r * Math.sin(rad)).toFixed(3);
+      const px    = cx + r * Math.cos(thetaRad) * scale;
+      const py    = cy - r * Math.sin(thetaRad) * scale;
+      const rectX = (r * Math.cos(thetaRad)).toFixed(4);
+      const rectY = (r * Math.sin(thetaRad)).toFixed(4);
+      const degEquiv = ((thetaRad * 180 / Math.PI) % 360).toFixed(2);
+      const radEquiv = formatRad(((thetaRad % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI));
 
       drawGrid();
 
-      // Draw line from origin to point
+      // Dashed line from origin to point
       ctx.strokeStyle = '#2ec4b6';
       ctx.lineWidth = 2;
       ctx.setLineDash([5, 4]);
@@ -262,31 +364,40 @@
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Arc for angle
+      // Angle arc
       ctx.strokeStyle = '#ffb703';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.arc(cx, cy, 22, 0, -rad, rad < 0);
+      ctx.arc(cx, cy, 22, 0, -thetaRad, thetaRad < 0);
       ctx.stroke();
 
-      // Draw point
+      // Point dot
       ctx.fillStyle = '#1a2744';
       ctx.beginPath();
       ctx.arc(px, py, 6, 0, 2 * Math.PI);
       ctx.fill();
 
-      // Label point
+      // Point label
       ctx.fillStyle = '#1a2744';
-      ctx.font = 'bold 12px Georgia';
+      ctx.font = 'bold 11px Georgia';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(`(${r}, ${theta}°)`, px + 9, py - 4);
+      ctx.fillText(`(${r}, ${thetaDisplay})`, px + 9, py - 4);
+
+      // Result box
+      const bothAngles = currentMode === 'deg'
+        ? `also = <strong>${radEquiv}</strong>`
+        : `also = <strong>${degEquiv}°</strong>`;
 
       document.getElementById('resultBox').innerHTML =
-        `Polar: <strong>(${r}, ${theta}°)</strong><br>` +
-        `x = ${r} · cos(${theta}°) = <strong>${rectX}</strong><br>` +
-        `y = ${r} · sin(${theta}°) = <strong>${rectY}</strong><br>` +
+        `Polar: <strong>(${r}, ${thetaDisplay})</strong> &nbsp;(${bothAngles})<br>` +
+        `x = ${r} · cos(${thetaDisplay}) = <strong>${rectX}</strong><br>` +
+        `y = ${r} · sin(${thetaDisplay}) = <strong>${rectY}</strong><br>` +
         `Rectangular: <strong>(${rectX}, ${rectY})</strong>`;
+    }
+
+    function showError() {
+      document.getElementById('resultBox').textContent = 'Please enter valid numbers. In RAD mode, try "pi/2" or "3pi/4".';
     }
 
     function toggleAnswer(id, btn) {
@@ -300,7 +411,7 @@
       }
     }
 
-    // Initial draw
+    // Init
     drawGrid();
     plotPoint();
   </script>
